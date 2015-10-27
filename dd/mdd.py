@@ -16,7 +16,7 @@ Michael Miller and Rolf Drechsler
     Multiple-Valued Logic (ISMVL), 1998
     pp.52--57
 """
-from itertools import tee, izip
+from itertools import tee
 import logging
 import sys
 from dd import bdd as _bdd
@@ -73,7 +73,7 @@ class MDD(object):
         self._level_to_var = None
         self._parser = None
         self._free = set()
-        self.max_nodes = sys.maxint
+        self.max_nodes = sys.maxsize
 
     def __len__(self):
         """Return number of BDD nodes."""
@@ -121,7 +121,7 @@ class MDD(object):
         if self._level_to_var is None:
             self._level_to_var = {
                 d['level']: var
-                for var, d in self.vars.iteritems()}
+                for var, d in self.vars.items()}
         return self._level_to_var[i]
 
     def level_of_var(self, var):
@@ -242,7 +242,7 @@ class MDD(object):
             cond[x].add(j)
         # format
         cond_str = dict()
-        for k, v in cond.iteritems():
+        for k, v in cond.items():
             if len(v) == 1:
                 (j,) = v
                 cond_str[k] = '= {j}'.format(j=j)
@@ -285,15 +285,15 @@ def bdd_to_mdd(bdd, dvars):
     #
     # map from bits to integers
     bit_to_var = dict()
-    for var, d in dvars.iteritems():
+    for var, d in dvars.items():
         bits = d['bitnames']
         b = {bit: var for bit in bits}
         bit_to_var.update(b)
     # find target bit ordering
     ordering = list()  # target
-    levels = {d['level']: var for var, d in dvars.iteritems()}
+    levels = {d['level']: var for var, d in dvars.items()}
     m = len(levels)
-    for j in xrange(m):
+    for j in range(m):
         var = levels[j]
         bits = dvars[var]['bitnames']
         ordering.extend(bits)
@@ -305,7 +305,7 @@ def bdd_to_mdd(bdd, dvars):
     mdd = MDD(dvars)
     # zones of bits per integer var
     zones = dict()
-    for var, d in dvars.iteritems():
+    for var, d in dvars.items():
         bits = d['bitnames']
         lsb = bits[0]
         msb = bits[-1]
@@ -314,7 +314,7 @@ def bdd_to_mdd(bdd, dvars):
         zones[var] = (min_level, max_level)
     # reverse edges
     pred = {u: set() for u in bdd}
-    for u, (_, v, w) in bdd._succ.iteritems():
+    for u, (_, v, w) in bdd._succ.items():
         assert u > 0, u
         # terminal ?
         if u == 1:
@@ -324,7 +324,7 @@ def bdd_to_mdd(bdd, dvars):
         pred[abs(w)].add(u)
     # find BDD nodes mentioned from above
     rm = set()
-    for u, p in pred.iteritems():
+    for u, p in pred.items():
         rc = bdd.ref(u)
         k = len(p)  # number of predecessors
         # has external refs ?
@@ -341,7 +341,7 @@ def bdd_to_mdd(bdd, dvars):
             continue
         # referenced only from inside zone
         rm.add(u)
-    pred = {u: p for u, p in pred.iteritems() if u not in rm}
+    pred = {u: p for u, p in pred.items() if u not in rm}
     # build layer by layer
     # TODO: use bins, instad of iterating through all nodes
     bdd.assert_consistent()
@@ -387,7 +387,7 @@ def bdd_to_mdd(bdd, dvars):
 
 def _enumerate_integer(bits):
     n = len(bits)
-    for i in xrange(2**n):
+    for i in range(2**n):
         values = list(reversed(bin(i).lstrip('-0b').zfill(1)))
         d = {bit: int(v) for bit, v in zip(bits, values)}
         for bit in bits[len(values):]:
@@ -401,7 +401,7 @@ def to_pydot(mdd):
     skeleton = list()
     subgraphs = dict()
     n = len(mdd.vars) + 1
-    for i in xrange(n):
+    for i in range(n):
         h = pydot.Subgraph('', rank='same')
         g.add_subgraph(h)
         subgraphs[i] = h
@@ -413,11 +413,11 @@ def to_pydot(mdd):
     # auxiliary edges for ranking
     a, b = tee(skeleton)
     next(b, None)
-    for u, v in izip(a, b):
+    for u, v in zip(a, b):
         e = pydot.Edge(str(u), str(v), style='invis')
         g.add_edge(e)
     # add nodes
-    for u, t in mdd._succ.iteritems():
+    for u, t in mdd._succ.items():
         assert u > 0, u
         i = t[0]
         nodes = t[1:]

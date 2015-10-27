@@ -4,7 +4,7 @@ import os
 import subprocess
 import sys
 import tarfile
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 try:
     from Cython.Build import cythonize
     pyx = '.pyx'
@@ -73,7 +73,7 @@ def extensions():
             sources=['dd/buddy' + pyx],
             libraries=['bdd']))
     if pyx == '.pyx':
-        for k, v in extensions.iteritems():
+        for k, v in extensions.items():
             extensions[k] = cythonize(v)[0]
     return extensions
 
@@ -83,8 +83,8 @@ def _join(paths):
 
 
 def fetch(url, sha256, fname=None):
-    print('++ download: {url}'.format(url=url))
-    u = urllib2.urlopen(url)
+    print(('++ download: {url}'.format(url=url)))
+    u = urllib.request.urlopen(url)
     if fname is None:
         fname = url.split('/')[-1]
     with open(fname, 'wb') as f:
@@ -99,7 +99,7 @@ def fetch(url, sha256, fname=None):
 
 
 def untar(fname):
-    print('++ unpack: {f}'.format(f=fname))
+    print(('++ unpack: {f}'.format(f=fname)))
     with tarfile.open(fname) as tar:
         tar.extractall()
     print('-- done unpacking.')

@@ -59,7 +59,7 @@ class Lexer(object):
         'rootnames': 'ROOTNAMES',
         'nodes': 'NODES',
         'end': 'END'}
-    reserved = {'.{k}'.format(k=k): v for k, v in reserved.iteritems()}
+    reserved = {'.{k}'.format(k=k): v for k, v in reserved.items()}
     misc = ['MINUS', 'DOT', 'NAME', 'NUMBER']
     # token rules
     t_MINUS = r'-'
@@ -68,7 +68,7 @@ class Lexer(object):
     t_ignore = ' \t'
 
     def __init__(self, debug=False):
-        self.tokens = self.misc + self.reserved.values()
+        self.tokens = self.misc + list(self.reserved.values())
         self.build(debug=debug)
 
     def t_KEYWORD(self, t):
@@ -191,11 +191,11 @@ class Parser(object):
                 if '.end' in line:
                     break
                 try:
-                    u, info, index, v, w = map(int, line.split(' '))
+                    u, info, index, v, w = list(map(int, line.split(' ')))
                 except ValueError:
                     u, info, index, v, w = line.split(' ')
                     assert info == 'T', info
-                    u, index, v, w = map(int, (u, index, v, w))
+                    u, index, v, w = list(map(int, (u, index, v, w)))
                 self._add_node(u, info, index, v, w)
         roots = set(self.rootids)
         # ok ?
@@ -422,15 +422,15 @@ def load(fname):
     parser = Parser()
     bdd_succ, n_vars, ordering, roots = parser.parse(fname)
     # reindex to ensure no blanks
-    perm = {k: var for var, k in ordering.iteritems()}
+    perm = {k: var for var, k in ordering.items()}
     perm = {i: perm[k] for i, k in enumerate(sorted(perm))}
-    new_ordering = {var: k for k, var in perm.iteritems()}
+    new_ordering = {var: k for k, var in perm.items()}
     old2new = {ordering[var]: new_ordering[var] for var in ordering}
     # convert
     bdd = BDD(new_ordering)
     umap = {-1: -1, 1: 1}
-    for j in xrange(len(new_ordering) - 1, -1, -1):
-        for u, (k, v, w) in bdd_succ.iteritems():
+    for j in range(len(new_ordering) - 1, -1, -1):
+        for u, (k, v, w) in bdd_succ.items():
             # terminal ?
             if v is None:
                 assert w is None, w
